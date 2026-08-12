@@ -1,0 +1,10 @@
+{
+  "name": "@promptless/extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser extension",
+  "scripts": {
+    "dev": "echo \"Browser extension scaffold — implement in a later week\"",
+    "build": "echo \"No build yet\""
+  }
+}

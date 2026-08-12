@@ -1,0 +1,10 @@
+{
+  "name": "@promptless/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "React Native app",
+  "scripts": {
+    "dev": "echo \"Mobile (React Native) scaffold — implement later\"",
+    "build": "echo \"No build yet\""
+  }
+}

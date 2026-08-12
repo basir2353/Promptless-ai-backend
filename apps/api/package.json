@@ -1,0 +1,37 @@
+{
+  "name": "@promptless/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NestJS + tRPC backend (main API)",
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "nest start",
+    "start:prod": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:ai": "tsx --tsconfig tsconfig.json scripts/test-generate-suggestion.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.12",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.12",
+    "@nestjs/platform-express": "^11.0.12",
+    "@promptless/ai": "workspace:*",
+    "@promptless/core": "workspace:*",
+    "@trpc/server": "^11.0.1",
+    "dotenv": "^16.4.7",
+    "pg": "^8.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.6",
+    "@nestjs/schematics": "^11.0.3",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

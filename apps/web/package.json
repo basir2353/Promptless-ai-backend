@@ -1,0 +1,10 @@
+{
+  "name": "@promptless/web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Next.js dashboard",
+  "scripts": {
+    "dev": "echo \"Web (Next.js) scaffold — implement later\"",
+    "build": "echo \"No build yet\""
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "promptless",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Promptless monorepo — NestJS + tRPC backend with shared packages",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @promptless/api",
+    "dev:api": "npm run dev -w @promptless/api",
+    "build": "npm run build -w @promptless/core && npm run build -w @promptless/ai && npm run build -w @promptless/perception && npm run build -w @promptless/memory && npm run build -w @promptless/integrations && npm run build -w @promptless/api",
+    "build:api": "npm run build -w @promptless/core && npm run build -w @promptless/ai && npm run build -w @promptless/api",
+    "start": "npm run start -w @promptless/api",
+    "start:prod": "npm run start:prod -w @promptless/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

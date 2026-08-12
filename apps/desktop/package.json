@@ -1,0 +1,10 @@
+{
+  "name": "@promptless/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tauri desktop app (W4)",
+  "scripts": {
+    "dev": "echo \"Desktop (Tauri) scaffold — work here in W4\"",
+    "build": "echo \"No build yet\""
+  }
+}
