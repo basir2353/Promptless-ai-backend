@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { AiService } from '../ai/ai.service';
 import { DatabaseService } from '../database/database.service';
 import { HealthService } from '../health/health.service';
+import { MemoryRouterService } from './routers/memory.router.service';
 
 const generateSuggestionInput = z.object({
   prompt: z.string().min(1),
@@ -26,6 +27,7 @@ export class TrpcRouter {
     @Inject(HealthService) private readonly healthService: HealthService,
     @Inject(DatabaseService) private readonly database: DatabaseService,
     @Inject(AiService) private readonly aiService: AiService,
+    @Inject(MemoryRouterService) private readonly memoryRouter: MemoryRouterService,
   ) {}
 
   createAppRouter() {
@@ -42,6 +44,8 @@ export class TrpcRouter {
         })),
 
       dbStatus: publicProcedure.query(async () => this.database.checkHealth()),
+
+      memory: this.memoryRouter.router,
 
       ai: this.t.router({
         generateSuggestion: publicProcedure

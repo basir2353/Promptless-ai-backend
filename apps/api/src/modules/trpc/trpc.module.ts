@@ -1,11 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AiModule } from '../ai/ai.module';
 import { HealthModule } from '../health/health.module';
+import { DatabaseModule } from '../database/database.module';
+import { AiModule } from '../ai/ai.module';
+import { MemoryModule } from '../memory/memory.module';
 import { TrpcRouter } from './trpc.router';
+import { MemoryRouterService } from './routers/memory.router.service';
 
 @Module({
-  imports: [HealthModule, AiModule],
-  providers: [TrpcRouter],
-  exports: [TrpcRouter],
+  imports: [
+    HealthModule,
+    DatabaseModule,
+    AiModule,
+    MemoryModule,
+  ],
+  providers: [TrpcRouter, MemoryRouterService],
+  exports: [TrpcRouter, MemoryRouterService],
 })
 export class TrpcModule {}

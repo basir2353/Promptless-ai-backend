@@ -6,15 +6,17 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 export class QdrantService implements OnModuleInit {
   private readonly logger = new Logger(QdrantService.name);
   private client: QdrantClient;
+  private qdrantUrl: string;
+  private apiKey: string;
   public readonly COLLECTION_NAME = 'user_memories';
 
   constructor(private readonly configService: ConfigService) {
-    const url = this.configService.get<string>('QDRANT_URL');
-    const apiKey = this.configService.get<string>('QDRANT_API_KEY');
+    this.qdrantUrl = this.configService.get<string>('QDRANT_URL') || 'http://localhost:6333';
+    this.apiKey = this.configService.get<string>('QDRANT_API_KEY') || '';
 
     this.client = new QdrantClient({
-      url,
-      apiKey,
+      url: this.qdrantUrl,
+      apiKey: this.apiKey,
     });
   }
 
@@ -45,6 +47,13 @@ export class QdrantService implements OnModuleInit {
       } else {
         this.logger.log(`Qdrant Collection '${this.COLLECTION_NAME}' is ready.`);
       }
+
+      // Ensure 'userId' payload index exists for filtering
+      await this.client.createPayloadIndex(this.COLLECTION_NAME, {
+        field_name: 'userId',
+        field_schema: 'keyword',
+      });
+      this.logger.log(`Payload index for 'userId' ensured on '${this.COLLECTION_NAME}'.`);
     } catch (error) {
       this.logger.error('Failed to connect or initialize Qdrant collection:', error);
     }
@@ -73,17 +82,43 @@ export class QdrantService implements OnModuleInit {
   }
 
   async searchSimilar(userId: string, vector: number[], limit = 5) {
-    return await this.client.query(this.COLLECTION_NAME, {
-      query: vector,
-      limit,
-      filter: {
-        must: [
-          {
-            key: 'userId',
-            match: { value: userId },
+    try {
+      const endpoint = `${this.qdrantUrl.replace(/\/$/, '')}/collections/${this.COLLECTION_NAME}/points/search`;
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.apiKey ? { 'api-key': this.apiKey } : {}),
+        },
+        body: JSON.stringify({
+          vector,
+          limit,
+          with_payload: true,
+          filter: {
+            must: [
+              {
+                key: 'userId',
+                match: {
+                  value: userId,
+                },
+              },
+            ],
           },
-        ],
-      },
-    });
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        this.logger.error('Qdrant Native Search Raw Error:', JSON.stringify(data));
+        throw new Error(data?.status?.error || 'Qdrant search request failed');
+      }
+
+      return data.result;
+    } catch (err: any) {
+      this.logger.error('Qdrant Search Error Details:', err?.message || err);
+      throw err;
+    }
   }
 }
