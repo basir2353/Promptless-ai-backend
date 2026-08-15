@@ -4,6 +4,7 @@ import configuration from './config/configuration';
 import { DatabaseModule } from './modules/database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { TrpcModule } from './modules/trpc/trpc.module';
+import { QdrantService } from './modules/memory/qdrant.service';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { TrpcModule } from './modules/trpc/trpc.module';
     HealthModule,
     TrpcModule,
   ],
+  providers: [QdrantService],
 })
 export class AppModule {}
