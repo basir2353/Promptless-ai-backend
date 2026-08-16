@@ -5,6 +5,7 @@ import { AiModule } from '../ai/ai.module';
 import { MemoryModule } from '../memory/memory.module';
 import { TrpcRouter } from './trpc.router';
 import { MemoryRouterService } from './routers/memory.router.service';
+import { AiRouterService } from './routers/ai.router.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { MemoryRouterService } from './routers/memory.router.service';
     AiModule,
     MemoryModule,
   ],
-  providers: [TrpcRouter, MemoryRouterService],
-  exports: [TrpcRouter, MemoryRouterService],
+  providers: [TrpcRouter, MemoryRouterService, AiRouterService],
+  exports: [TrpcRouter, MemoryRouterService, AiRouterService],
 })
 export class TrpcModule {}
