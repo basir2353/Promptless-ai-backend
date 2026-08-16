@@ -18,9 +18,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       '@langchain/openai':
         specifier: ^1.5.7
-        version: 1.5.7(@langchain/core@1.2.6(openai@6.49.0(zod@3.25.76)))
+        version: 1.5.7(@langchain/core@1.2.6(openai@7.4.0(zod@3.25.76)))
       '@nestjs/common':
         specifier: ^11.0.12
         version: 11.1.29(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
@@ -48,6 +51,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      openai:
+        specifier: ^7.4.0
+        version: 7.4.0(zod@3.25.76)
       pg:
         specifier: ^8.14.1
         version: 8.23.0
@@ -327,6 +333,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
 
   '@inquirer/ansi@1.0.2':
     resolution: {integrity: sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==}
@@ -1467,6 +1477,27 @@ packages:
       zod:
         optional: true
 
+  openai@7.4.0:
+    resolution: {integrity: sha512-+C9Muit5x8j9R8ej8ZzVgKcrVDtqFqTy9gxFdov0EItLgU68zrJtF9ZeT0cyqJQW9S3PCJkdFgADtRGquRBtew==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   ora@5.4.1:
     resolution: {integrity: sha512-5b6Y85tPxZZ7QytO+BQzysW31HJku27cRIlkbAXaNx+BdcVi+LlRFmVXzeF6a7JCwJpyw5c4b+YSVImQIrBpuQ==}
     engines: {node: '>=10'}
@@ -2083,6 +2114,8 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
+  '@google/generative-ai@0.24.1': {}
+
   '@inquirer/ansi@1.0.2': {}
 
   '@inquirer/checkbox@4.3.2(@types/node@22.20.1)':
@@ -2242,12 +2275,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@langchain/core@1.2.6(openai@6.49.0(zod@3.25.76))':
+  '@langchain/core@1.2.6(openai@7.4.0(zod@3.25.76))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@standard-schema/spec': 1.1.0
       js-tiktoken: 1.0.21
-      langsmith: 0.8.10(openai@6.49.0(zod@3.25.76))
+      langsmith: 0.8.10(openai@7.4.0(zod@3.25.76))
       mustache: 4.2.0
       p-queue: 6.6.2
       zod: 3.25.76
@@ -2258,9 +2291,9 @@ snapshots:
       - openai
       - ws
 
-  '@langchain/openai@1.5.7(@langchain/core@1.2.6(openai@6.49.0(zod@3.25.76)))':
+  '@langchain/openai@1.5.7(@langchain/core@1.2.6(openai@7.4.0(zod@3.25.76)))':
     dependencies:
-      '@langchain/core': 1.2.6(openai@6.49.0(zod@3.25.76))
+      '@langchain/core': 1.2.6(openai@7.4.0(zod@3.25.76))
       js-tiktoken: 1.0.21
       openai: 6.49.0(zod@3.25.76)
       zod: 3.25.76
@@ -3141,11 +3174,11 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  langsmith@0.8.10(openai@6.49.0(zod@3.25.76)):
+  langsmith@0.8.10(openai@7.4.0(zod@3.25.76)):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:
-      openai: 6.49.0(zod@3.25.76)
+      openai: 7.4.0(zod@3.25.76)
 
   lines-and-columns@1.2.4: {}
 
@@ -3258,6 +3291,10 @@ snapshots:
       mimic-fn: 2.1.0
 
   openai@6.49.0(zod@3.25.76):
+    optionalDependencies:
+      zod: 3.25.76
+
+  openai@7.4.0(zod@3.25.76):
     optionalDependencies:
       zod: 3.25.76
 
