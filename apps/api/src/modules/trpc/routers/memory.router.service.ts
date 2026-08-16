@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
+import { PrismaClient } from '@prisma/client';
 import { QdrantService } from '../../memory/qdrant.service';
 import { EmbeddingService } from '../../memory/embedding.service';
 
 const t = initTRPC.create();
+const prisma = new PrismaClient();
 
 @Injectable()
 export class MemoryRouterService {
@@ -15,35 +17,62 @@ export class MemoryRouterService {
 
   get router() {
     return t.router({
-      addMemory: t.procedure
-        .input(
-          z.object({
-            userId: z.string(),
-            text: z.string(),
-            metadata: z.record(z.any()).optional(),
-          }),
-        )
-        .mutation(async (opts: { input: { userId: string; text: string; metadata?: Record<string, any> } }) => {
-          const { userId, text, metadata } = opts.input;
-          
-          const vector = await this.embeddingService.generateEmbedding(text);
-          const id = crypto.randomUUID();
+ // 1. ADD MEMORY (Dual-Write)
+ addMemory: t.procedure
+ .input(
+   z.object({
+     userId: z.string(),
+     text: z.string(),
+     type: z.string().optional().default('user_fact'),
+     metadata: z.record(z.any()).optional(),
+   }),
+ )
+ .mutation(async (opts: { input: { userId: string; text: string; type?: string; metadata?: Record<string, any> } }) => {
+   const { userId, text, type, metadata } = opts.input;
+   
+   const vector = await this.embeddingService.generateEmbedding(text);
+   const id = crypto.randomUUID();
 
-          await this.qdrantService.upsertMemory({
-            id,
-            vector,
-            userId,
-            text,
-            metadata,
-          });
+   // 1. Ensure User exists in Postgres (Foreign Key Fix)
+   await prisma.user.upsert({
+     where: { id: userId },
+     update: {},
+     create: {
+       id: userId,
+       email: `${userId}@placeholder.local`,
+     },
+   });
 
-          return {
-            success: true,
-            id,
-            message: 'Memory embedded and stored successfully!',
-          };
-        }),
+   // 2. Vector DB (Qdrant)
+   await this.qdrantService.upsertMemory({
+     id,
+     vector,
+     userId,
+     text,
+     metadata,
+   });
 
+   // 3. PostgreSQL (Prisma)
+   await prisma.memoryItem.create({
+     data: {
+       id,
+       userId,
+       type: type || 'user_fact',
+       text,
+       embeddingId: id,
+       meta: metadata || {},
+     },
+   });
+
+   return {
+     success: true,
+     id,
+     message: 'Memory stored in both Qdrant and PostgreSQL successfully!',
+   };
+ }),
+  
+
+      // 2. SEARCH MEMORIES
       searchMemories: t.procedure
         .input(
           z.object({
@@ -69,6 +98,7 @@ export class MemoryRouterService {
           };
         }),
 
+      // 3. DELETE MEMORY (Dual Delete)
       deleteMemory: t.procedure
         .input(
           z.object({
@@ -76,13 +106,20 @@ export class MemoryRouterService {
           }),
         )
         .mutation(async (opts: { input: { memoryId: string } }) => {
-          await this.qdrantService.deleteMemory(opts.input.memoryId);
+          const { memoryId } = opts.input;
+
+          await this.qdrantService.deleteMemory(memoryId);
+          await prisma.memoryItem.delete({
+            where: { id: memoryId },
+          }).catch(() => null);
+
           return {
             success: true,
-            message: 'Memory deleted successfully!',
+            message: 'Memory deleted from both Qdrant and PostgreSQL!',
           };
         }),
 
+      // 4. CLEAR ALL MEMORIES
       clearUserMemories: t.procedure
         .input(
           z.object({
@@ -90,10 +127,16 @@ export class MemoryRouterService {
           }),
         )
         .mutation(async (opts: { input: { userId: string } }) => {
-          await this.qdrantService.clearUserMemories(opts.input.userId);
+          const { userId } = opts.input;
+
+          await this.qdrantService.clearUserMemories(userId);
+          await prisma.memoryItem.deleteMany({
+            where: { userId },
+          });
+
           return {
             success: true,
-            message: 'All user memories cleared successfully!',
+            message: 'All user memories cleared from Qdrant and PostgreSQL!',
           };
         }),
     });

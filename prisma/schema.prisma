@@ -55,16 +55,16 @@ model Permission {
 }
 
 model Suggestion {
-  id             String   @id @default(cuid())
-  userId         String
-  app            String
-  issue          String
-  impact         Impact
-  timeSavedMins  Int
-  status         String   @default("pending")
-  explanation    String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String
+  app           String
+  issue         String
+  impact        Impact
+  timeSavedMins Int
+  status        String   @default("pending")
+  explanation   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   actions Action[]
@@ -88,7 +88,7 @@ model Action {
 model MemoryItem {
   id          String   @id @default(cuid())
   userId      String
-  type        String
+  type        String   @default("user_fact")
   text        String
   embeddingId String?
   meta        Json     @default("{}")
