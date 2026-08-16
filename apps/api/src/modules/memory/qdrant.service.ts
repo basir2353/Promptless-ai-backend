@@ -48,7 +48,6 @@ export class QdrantService implements OnModuleInit {
         this.logger.log(`Qdrant Collection '${this.COLLECTION_NAME}' is ready.`);
       }
 
-      // Ensure 'userId' payload index exists for filtering
       await this.client.createPayloadIndex(this.COLLECTION_NAME, {
         field_name: 'userId',
         field_schema: 'keyword',
@@ -118,6 +117,37 @@ export class QdrantService implements OnModuleInit {
       return data.result;
     } catch (err: any) {
       this.logger.error('Qdrant Search Error Details:', err?.message || err);
+      throw err;
+    }
+  }
+
+  async deleteMemory(memoryId: string) {
+    try {
+      return await this.client.delete(this.COLLECTION_NAME, {
+        points: [memoryId],
+      });
+    } catch (err: any) {
+      this.logger.error('Failed to delete memory point:', err?.message || err);
+      throw err;
+    }
+  }
+
+  async clearUserMemories(userId: string) {
+    try {
+      return await this.client.delete(this.COLLECTION_NAME, {
+        filter: {
+          must: [
+            {
+              key: 'userId',
+              match: {
+                value: userId,
+              },
+            },
+          ],
+        },
+      });
+    } catch (err: any) {
+      this.logger.error('Failed to clear user memories:', err?.message || err);
       throw err;
     }
   }

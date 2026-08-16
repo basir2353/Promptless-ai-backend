@@ -68,6 +68,34 @@ export class MemoryRouterService {
             results,
           };
         }),
+
+      deleteMemory: t.procedure
+        .input(
+          z.object({
+            memoryId: z.string(),
+          }),
+        )
+        .mutation(async (opts: { input: { memoryId: string } }) => {
+          await this.qdrantService.deleteMemory(opts.input.memoryId);
+          return {
+            success: true,
+            message: 'Memory deleted successfully!',
+          };
+        }),
+
+      clearUserMemories: t.procedure
+        .input(
+          z.object({
+            userId: z.string(),
+          }),
+        )
+        .mutation(async (opts: { input: { userId: string } }) => {
+          await this.qdrantService.clearUserMemories(opts.input.userId);
+          return {
+            success: true,
+            message: 'All user memories cleared successfully!',
+          };
+        }),
     });
   }
 }
