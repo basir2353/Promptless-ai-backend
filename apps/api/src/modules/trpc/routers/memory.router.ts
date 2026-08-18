@@ -5,18 +5,19 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const memoryRouter = router({
-  // 1. ADD MEMORY
+  // 1. ADD MEMORY / CONTEXT
   addMemory: publicProcedure
     .input(
       z.object({
         userId: z.string(),
         text: z.string(),
+        app: z.string().optional().default('general'),
         type: z.string().optional().default('user_fact'),
         metadata: z.record(z.any()).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { userId, text, type, metadata } = input;
+      const { userId, text, app, type, metadata } = input;
       const id = crypto.randomUUID();
 
       // Ensure User exists in PostgreSQL
@@ -29,7 +30,7 @@ export const memoryRouter = router({
         },
       });
 
-      // Save to PostgreSQL
+      // Save to PostgreSQL with App and Metadata context
       const memory = await prisma.memoryItem.create({
         data: {
           id,
@@ -37,7 +38,10 @@ export const memoryRouter = router({
           type: type || 'user_fact',
           text,
           embeddingId: id,
-          meta: metadata || {},
+          meta: {
+            ...(metadata || {}),
+            app: app || 'general',
+          },
         },
       });
 
