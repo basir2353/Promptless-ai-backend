@@ -14,6 +14,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@langchain/openai": "^1.5.7",
+    "@nestjs/bullmq": "^11.0.5",
     "@nestjs/common": "^11.0.12",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.12",
@@ -22,6 +23,7 @@
     "@promptless/core": "workspace:*",
     "@qdrant/js-client-rest": "^1.19.0",
     "@trpc/server": "^11.0.1",
+    "bullmq": "^6.1.2",
     "dotenv": "^16.4.7",
     "openai": "^7.4.0",
     "pg": "^8.14.1",
