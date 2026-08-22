@@ -2,9 +2,9 @@
   "name": "@promptless/extension",
   "version": "1.0.0",
   "private": true,
-  "description": "Browser extension",
+  "description": "Browser extension + web bridge for Promptless",
   "scripts": {
-    "dev": "echo \"Browser extension scaffold — implement in a later week\"",
-    "build": "echo \"No build yet\""
+    "dev": "node bridge.mjs",
+    "bridge": "node bridge.mjs"
   }
 }

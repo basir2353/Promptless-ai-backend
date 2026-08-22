@@ -2,9 +2,9 @@
   "name": "@promptless/mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "React Native app",
+  "description": "React Native data layer connected to live tRPC",
   "scripts": {
-    "dev": "echo \"Mobile (React Native) scaffold — implement later\"",
-    "build": "echo \"No build yet\""
+    "dev": "node sync.mjs",
+    "sync": "node sync.mjs"
   }
 }

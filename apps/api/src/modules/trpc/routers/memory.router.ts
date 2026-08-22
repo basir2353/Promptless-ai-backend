@@ -26,7 +26,7 @@ export const memoryRouter = router({
         update: {},
         create: {
           id: userId,
-          email: `${userId}@placeholder.local`,
+          email: userId.includes("@") ? userId : `${userId}@placeholder.local`,
         },
       });
 

@@ -4,6 +4,7 @@ import configuration from './config/configuration';
 import { DatabaseModule } from './modules/database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { TrpcModule } from './modules/trpc/trpc.module';
+import { BillingModule } from './modules/billing/billing.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TrpcModule } from './modules/trpc/trpc.module';
     DatabaseModule,
     HealthModule,
     TrpcModule,
+    BillingModule,
   ],
 })
 export class AppModule {}

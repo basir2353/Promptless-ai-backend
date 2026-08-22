@@ -1,15 +1,27 @@
 import { NestFactory } from '@nestjs/core';
+import { json, type NextFunction, type Request, type Response } from 'express';
 import { AppModule } from './app.module';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { TrpcRouter } from './modules/trpc/trpc.router';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // tRPC must read the raw body. Nest's JSON parser would eat it first
+  // and leave procedure inputs as undefined.
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   app.enableCors();
 
-  const trpcRouter = app.get(TrpcRouter);
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const contentType = String(req.headers['content-type'] ?? '').toLowerCase();
+      if (!contentType || contentType.startsWith('text/plain')) {
+        req.headers['content-type'] = 'application/json';
+      }
+    }
+    next();
+  });
 
+  const trpcRouter = app.get(TrpcRouter);
   app.use(
     '/trpc',
     trpcExpress.createExpressMiddleware({
@@ -17,6 +29,8 @@ async function bootstrap() {
       createContext: () => ({}),
     }),
   );
+
+  app.use(json());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

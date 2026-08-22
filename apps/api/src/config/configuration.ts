@@ -32,4 +32,12 @@ export default () => ({
       (process.env.AI_STUB ?? '').trim().toLowerCase(),
     ),
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+  },
+  push: {
+    fcmServerKey: process.env.FCM_SERVER_KEY,
+  },
+  publicApiUrl: process.env.PUBLIC_API_URL ?? 'http://localhost:3000',
+  publicWebUrl: process.env.PUBLIC_WEB_URL ?? 'http://localhost:5174',
 });
