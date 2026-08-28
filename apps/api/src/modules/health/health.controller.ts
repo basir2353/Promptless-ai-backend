@@ -1,6 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
-import type { HealthResponse } from '@promptless/core';
-import { HealthService } from './health.service';
+import { Controller, Get } from "@nestjs/common";
+import type { HealthResponse } from "@promptless/core";
+import { HealthService } from "./health.service";
 
 @Controller()
 export class HealthController {

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { initTRPC } from '@trpc/server';
-import { z } from 'zod';
-import { AiService } from '../../ai/ai.service';
+import { Injectable } from "@nestjs/common";
+import { initTRPC } from "@trpc/server";
+import { z } from "zod";
+import { AiService } from "../../ai/ai.service";
 
 const t = initTRPC.create();
 
@@ -18,10 +18,12 @@ export class AiRouterService {
             prompt: z.string(),
           }),
         )
-        .mutation(async (opts: { input: { userId: string; prompt: string } }) => {
-          const { userId, prompt } = opts.input;
-          return await this.aiService.generateChatResponse(userId, prompt);
-        }),
+        .mutation(
+          async (opts: { input: { userId: string; prompt: string } }) => {
+            const { userId, prompt } = opts.input;
+            return await this.aiService.generateChatResponse(userId, prompt);
+          },
+        ),
     });
   }
 }

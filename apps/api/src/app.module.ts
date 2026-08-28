@@ -11,7 +11,7 @@ import { BillingModule } from './modules/billing/billing.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      envFilePath: ['../../.env', '.env'],
+      envFilePath: ["../../.env", ".env"],
     }),
     DatabaseModule,
     HealthModule,

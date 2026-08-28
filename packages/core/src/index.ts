@@ -1,6 +1,6 @@
 /** Shared health-check response shape used by the API and clients. */
 export interface HealthResponse {
-  status: 'ok' | 'degraded';
+  status: "ok" | "degraded";
   message: string;
   timestamp: string;
   uptimeSeconds: number;
@@ -21,7 +21,7 @@ export interface ApiErrorBody {
 }
 
 /** Impact levels aligned with Prisma `Impact` enum. */
-export type Impact = 'LOW' | 'MEDIUM' | 'HIGH';
+export type Impact = "LOW" | "MEDIUM" | "HIGH";
 
 /**
  * Suggestion shape shared across apps (matches Prisma Suggestion fields
@@ -49,4 +49,4 @@ export interface SuggestionDraft {
   explanation: string;
 }
 
-export * from './schemas';
+export * from "./schemas";

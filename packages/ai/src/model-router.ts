@@ -1,12 +1,12 @@
-import { OllamaAdapter } from './adapters/ollama';
-import { OpenRouterAdapter } from './adapters/openrouter';
-import { StubAdapter } from './adapters/stub';
-import type { ModelAdapter } from './adapters/types';
-import { AiGatewayError } from './errors';
+import { OllamaAdapter } from "./adapters/ollama";
+import { OpenRouterAdapter } from "./adapters/openrouter";
+import { StubAdapter } from "./adapters/stub";
+import type { ModelAdapter } from "./adapters/types";
+import { AiGatewayError } from "./errors";
 import {
   parseGeneratedSuggestion,
   SUGGESTION_SYSTEM_PROMPT,
-} from './parse-suggestion';
+} from "./parse-suggestion";
 import type {
   CompletionResult,
   GenerateInput,
@@ -14,16 +14,16 @@ import type {
   ModelRouterConfig,
   RouteDecision,
   TaskComplexity,
-} from './types';
+} from "./types";
 
-const DEFAULT_COMPLEX_MODEL = 'openai/gpt-4o';
-const DEFAULT_SIMPLE_MODEL = 'openai/gpt-4o-mini';
-const DEFAULT_OLLAMA_MODEL = 'llama3';
-const DEFAULT_OLLAMA_URL = 'http://127.0.0.1:11434';
+const DEFAULT_COMPLEX_MODEL = "openai/gpt-4o";
+const DEFAULT_SIMPLE_MODEL = "openai/gpt-4o-mini";
+const DEFAULT_OLLAMA_MODEL = "llama3";
+const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 
-function formatContext(context: GenerateInput['context']): string {
-  if (context == null) return '';
-  if (typeof context === 'string') return context.trim();
+function formatContext(context: GenerateInput["context"]): string {
+  if (context == null) return "";
+  if (typeof context === "string") return context.trim();
   try {
     return JSON.stringify(context, null, 2);
   } catch {
@@ -33,7 +33,7 @@ function formatContext(context: GenerateInput['context']): string {
 
 function envFlag(value: string | undefined): boolean {
   if (!value) return false;
-  return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+  return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
 }
 
 /**
@@ -48,11 +48,11 @@ export class ModelRouter {
   private readonly config: Required<
     Pick<
       ModelRouterConfig,
-      | 'openRouterComplexModel'
-      | 'openRouterSimpleModel'
-      | 'ollamaBaseUrl'
-      | 'ollamaModel'
-      | 'temperature'
+      | "openRouterComplexModel"
+      | "openRouterSimpleModel"
+      | "ollamaBaseUrl"
+      | "ollamaModel"
+      | "temperature"
     >
   > &
     ModelRouterConfig;
@@ -76,8 +76,8 @@ export class ModelRouter {
     this.stubMode = Boolean(config.stub);
 
     if (this.stubMode) {
-      this.ollama = new StubAdapter('ollama');
-      this.openRouter = new StubAdapter('openrouter');
+      this.ollama = new StubAdapter("ollama");
+      this.openRouter = new StubAdapter("openrouter");
     } else {
       this.ollama = new OllamaAdapter({
         baseUrl: this.config.ollamaBaseUrl,
@@ -112,9 +112,7 @@ export class ModelRouter {
         DEFAULT_SIMPLE_MODEL,
       ollamaBaseUrl: env.OLLAMA_BASE_URL ?? DEFAULT_OLLAMA_URL,
       ollamaModel: env.OLLAMA_MODEL ?? DEFAULT_OLLAMA_MODEL,
-      temperature: env.AI_TEMPERATURE
-        ? Number(env.AI_TEMPERATURE)
-        : undefined,
+      temperature: env.AI_TEMPERATURE ? Number(env.AI_TEMPERATURE) : undefined,
       stub: envFlag(env.AI_STUB),
       ...overrides,
     });
@@ -124,29 +122,26 @@ export class ModelRouter {
    * Decide provider + model without calling the network.
    * Sensitive traffic always stays on local Ollama.
    */
-  decideRoute(
-    complexity: TaskComplexity,
-    isSensitive: boolean,
-  ): RouteDecision {
+  decideRoute(complexity: TaskComplexity, isSensitive: boolean): RouteDecision {
     if (isSensitive) {
       return {
-        provider: 'ollama',
+        provider: "ollama",
         model: this.config.ollamaModel,
-        reason: 'isSensitive=true → local Ollama (privacy)',
+        reason: "isSensitive=true → local Ollama (privacy)",
       };
     }
 
-    if (complexity === 'COMPLEX') {
+    if (complexity === "COMPLEX") {
       return {
-        provider: 'openrouter',
+        provider: "openrouter",
         model: this.config.openRouterComplexModel,
         reason: "complexity=COMPLEX → OpenRouter (GPT-4o / Claude 3.5 Sonnet)",
       };
     }
 
-    if (complexity === 'SIMPLE') {
+    if (complexity === "SIMPLE") {
       return {
-        provider: 'openrouter',
+        provider: "openrouter",
         model: this.config.openRouterSimpleModel,
         reason:
           "complexity=SIMPLE → OpenRouter lightweight model (GPT-4o-mini / Haiku)",
@@ -154,13 +149,15 @@ export class ModelRouter {
     }
 
     throw new AiGatewayError(
-      'ROUTING_ERROR',
+      "ROUTING_ERROR",
       `Unsupported complexity: ${String(complexity)}`,
     );
   }
 
   /** Low-level completion with routing applied. */
-  async generate(input: GenerateInput): Promise<CompletionResult & { route: RouteDecision }> {
+  async generate(
+    input: GenerateInput,
+  ): Promise<CompletionResult & { route: RouteDecision }> {
     this.assertValidInput(input);
     const route = this.decideRoute(input.complexity, input.isSensitive);
     const adapter = this.resolveAdapter(route.provider);
@@ -175,11 +172,11 @@ export class ModelRouter {
       temperature: this.config.temperature,
       messages: [
         {
-          role: 'system',
+          role: "system",
           content:
-            'You are a helpful assistant. Follow the user instructions carefully.',
+            "You are a helpful assistant. Follow the user instructions carefully.",
         },
-        { role: 'user', content: userContent },
+        { role: "user", content: userContent },
       ],
     });
 
@@ -199,19 +196,19 @@ export class ModelRouter {
 
     const userContent = [
       input.prompt.trim(),
-      contextBlock ? `Context:\n${contextBlock}` : '',
-      'Return only the Suggestion JSON object.',
+      contextBlock ? `Context:\n${contextBlock}` : "",
+      "Return only the Suggestion JSON object.",
     ]
       .filter(Boolean)
-      .join('\n\n');
+      .join("\n\n");
 
     const completion = await adapter.complete({
       model: route.model,
       temperature: this.config.temperature,
-      responseFormat: 'json',
+      responseFormat: "json",
       messages: [
-        { role: 'system', content: SUGGESTION_SYSTEM_PROMPT },
-        { role: 'user', content: userContent },
+        { role: "system", content: SUGGESTION_SYSTEM_PROMPT },
+        { role: "user", content: userContent },
       ],
     });
 
@@ -226,16 +223,16 @@ export class ModelRouter {
     };
   }
 
-  private resolveAdapter(provider: RouteDecision['provider']): ModelAdapter {
-    if (provider === 'ollama') {
+  private resolveAdapter(provider: RouteDecision["provider"]): ModelAdapter {
+    if (provider === "ollama") {
       return this.ollama;
     }
 
     if (!this.openRouter) {
       throw new AiGatewayError(
-        'CONFIG_ERROR',
-        'OPENROUTER_API_KEY is not configured but routing selected OpenRouter',
-        { provider: 'openrouter' },
+        "CONFIG_ERROR",
+        "OPENROUTER_API_KEY is not configured but routing selected OpenRouter",
+        { provider: "openrouter" },
       );
     }
 
@@ -244,18 +241,21 @@ export class ModelRouter {
 
   private assertValidInput(input: GenerateInput): void {
     if (!input.prompt?.trim()) {
-      throw new AiGatewayError('ROUTING_ERROR', 'prompt must be a non-empty string');
-    }
-    if (input.complexity !== 'SIMPLE' && input.complexity !== 'COMPLEX') {
       throw new AiGatewayError(
-        'ROUTING_ERROR',
+        "ROUTING_ERROR",
+        "prompt must be a non-empty string",
+      );
+    }
+    if (input.complexity !== "SIMPLE" && input.complexity !== "COMPLEX") {
+      throw new AiGatewayError(
+        "ROUTING_ERROR",
         `complexity must be SIMPLE or COMPLEX (got ${String(input.complexity)})`,
       );
     }
-    if (typeof input.isSensitive !== 'boolean') {
+    if (typeof input.isSensitive !== "boolean") {
       throw new AiGatewayError(
-        'ROUTING_ERROR',
-        'isSensitive must be a boolean',
+        "ROUTING_ERROR",
+        "isSensitive must be a boolean",
       );
     }
   }

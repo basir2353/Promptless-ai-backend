@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { OpenAIEmbeddings } from '@langchain/openai';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 @Injectable()
 export class EmbeddingService {
@@ -8,14 +8,14 @@ export class EmbeddingService {
   private embeddings: OpenAIEmbeddings;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('OPENROUTER_API_KEY');
+    const apiKey = this.configService.get<string>("OPENROUTER_API_KEY");
 
     this.embeddings = new OpenAIEmbeddings({
       openAIApiKey: apiKey,
       configuration: {
-        baseURL: 'https://openrouter.ai/api/v1',
+        baseURL: "https://openrouter.ai/api/v1",
       },
-      modelName: 'openai/text-embedding-3-small',
+      modelName: "openai/text-embedding-3-small",
       dimensions: 1536,
     });
   }
@@ -27,7 +27,7 @@ export class EmbeddingService {
       this.logger.log(`Generated embedding vector length: ${vector.length}`);
       return vector;
     } catch (error) {
-      this.logger.error('Failed to generate embedding vector:', error);
+      this.logger.error("Failed to generate embedding vector:", error);
       throw error;
     }
   }
@@ -37,7 +37,7 @@ export class EmbeddingService {
     try {
       return await this.embeddings.embedDocuments(texts);
     } catch (error) {
-      this.logger.error('Failed to generate batch embeddings:', error);
+      this.logger.error("Failed to generate batch embeddings:", error);
       throw error;
     }
   }

@@ -5,9 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import type { Request, Response } from 'express';
-import type { ApiErrorBody } from '@promptless/core';
+} from "@nestjs/common";
+import type { Request, Response } from "express";
+import type { ApiErrorBody } from "@promptless/core";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -27,19 +27,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.getResponse() : null;
 
     const message =
-      typeof exceptionResponse === 'string'
+      typeof exceptionResponse === "string"
         ? exceptionResponse
-        : typeof exceptionResponse === 'object' &&
+        : typeof exceptionResponse === "object" &&
             exceptionResponse !== null &&
-            'message' in exceptionResponse
+            "message" in exceptionResponse
           ? String(
               Array.isArray((exceptionResponse as { message: unknown }).message)
-                ? (exceptionResponse as { message: string[] }).message.join(', ')
+                ? (exceptionResponse as { message: string[] }).message.join(
+                    ", ",
+                  )
                 : (exceptionResponse as { message: unknown }).message,
             )
           : exception instanceof Error
             ? exception.message
-            : 'Internal server error';
+            : "Internal server error";
 
     if (status >= 500) {
       this.logger.error(
@@ -51,7 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const body: ApiErrorBody = {
       statusCode: status,
       message,
-      error: HttpStatus[status] ?? 'Error',
+      error: HttpStatus[status] ?? "Error",
       path: request.url,
       timestamp: new Date().toISOString(),
     };

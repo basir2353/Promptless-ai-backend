@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { PrismaClient } from '@prisma/client';
+import { z } from "zod";
+import { router, publicProcedure } from "../trpc";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -11,8 +11,8 @@ export const memoryRouter = router({
       z.object({
         userId: z.string(),
         text: z.string(),
-        app: z.string().optional().default('general'),
-        type: z.string().optional().default('user_fact'),
+        app: z.string().optional().default("general"),
+        type: z.string().optional().default("user_fact"),
         metadata: z.record(z.any()).optional(),
       }),
     )
@@ -35,12 +35,12 @@ export const memoryRouter = router({
         data: {
           id,
           userId,
-          type: type || 'user_fact',
+          type: type || "user_fact",
           text,
           embeddingId: id,
           meta: {
             ...(metadata || {}),
-            app: app || 'general',
+            app: app || "general",
           },
         },
       });
@@ -49,7 +49,7 @@ export const memoryRouter = router({
         success: true,
         id,
         memory,
-        message: 'Memory stored in database successfully!',
+        message: "Memory stored in database successfully!",
       };
     }),
 
@@ -59,7 +59,7 @@ export const memoryRouter = router({
     .query(async ({ input }) => {
       const memories = await prisma.memoryItem.findMany({
         where: { userId: input.userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
       return { success: true, memories };
     }),
@@ -74,7 +74,7 @@ export const memoryRouter = router({
         })
         .catch(() => null);
 
-      return { success: true, message: 'Memory deleted!' };
+      return { success: true, message: "Memory deleted!" };
     }),
 
   // 4. CLEAR USER MEMORIES
@@ -84,6 +84,6 @@ export const memoryRouter = router({
       await prisma.memoryItem.deleteMany({
         where: { userId: input.userId },
       });
-      return { success: true, message: 'User memories cleared!' };
+      return { success: true, message: "User memories cleared!" };
     }),
 });

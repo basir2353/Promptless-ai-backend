@@ -4,9 +4,14 @@ import {
   Logger,
   OnModuleDestroy,
   OnModuleInit,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from 'pg';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import {
+  Pool,
+  type PoolClient,
+  type QueryResult,
+  type QueryResultRow,
+} from "pg";
 
 export interface DatabaseHealth {
   connected: boolean;
@@ -32,7 +37,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   getPool(): Pool {
     if (!this.pool) {
-      throw new Error('Database pool is not initialized');
+      throw new Error("Database pool is not initialized");
     }
     return this.pool;
   }
@@ -61,14 +66,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (!this.pool) {
       this.lastHealth = {
         connected: false,
-        error: 'Database pool not initialized',
+        error: "Database pool not initialized",
       };
       return this.lastHealth;
     }
 
     const started = Date.now();
     try {
-      await this.pool.query('SELECT 1 AS ok');
+      await this.pool.query("SELECT 1 AS ok");
       this.lastHealth = {
         connected: true,
         latencyMs: Date.now() - started,
@@ -84,23 +89,30 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async connect(): Promise<void> {
-    const url = this.config.get<string>('database.url');
-    const ssl = this.config.get<boolean>('database.ssl') ? { rejectUnauthorized: false } : false;
+    const url = this.config.get<string>("database.url");
+    const ssl = this.config.get<boolean>("database.ssl")
+      ? { rejectUnauthorized: false }
+      : false;
 
     this.pool = url
-      ? new Pool({ connectionString: url, ssl, max: 10, idleTimeoutMillis: 30_000 })
+      ? new Pool({
+          connectionString: url,
+          ssl,
+          max: 10,
+          idleTimeoutMillis: 30_000,
+        })
       : new Pool({
-          host: this.config.get<string>('database.host'),
-          port: this.config.get<number>('database.port'),
-          user: this.config.get<string>('database.user'),
-          password: this.config.get<string>('database.password'),
-          database: this.config.get<string>('database.name'),
+          host: this.config.get<string>("database.host"),
+          port: this.config.get<number>("database.port"),
+          user: this.config.get<string>("database.user"),
+          password: this.config.get<string>("database.password"),
+          database: this.config.get<string>("database.name"),
           ssl,
           max: 10,
           idleTimeoutMillis: 30_000,
         });
 
-    this.pool.on('error', (err) => {
+    this.pool.on("error", (err) => {
       this.logger.error(`Unexpected PostgreSQL pool error: ${err.message}`);
       this.lastHealth = { connected: false, error: err.message };
     });
@@ -114,7 +126,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } else {
       // Do not crash the API — health endpoint reports DB status
       this.logger.warn(
-        `PostgreSQL not reachable (${health.error ?? 'unknown'}). ` +
+        `PostgreSQL not reachable (${health.error ?? "unknown"}). ` +
           `Update DATABASE_* in .env. Target: ${this.describeTarget()}`,
       );
     }
@@ -135,7 +147,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         VALUES ($1, $2)
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
       `,
-        ['schema_version', '1'],
+        ["schema_version", "1"],
       );
     } catch (error) {
       this.logger.warn(
@@ -148,20 +160,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (this.pool) {
       await this.pool.end();
       this.pool = null;
-      this.logger.log('PostgreSQL pool closed');
+      this.logger.log("PostgreSQL pool closed");
     }
   }
 
   private describeTarget(): string {
-    const url = this.config.get<string>('database.url');
+    const url = this.config.get<string>("database.url");
     if (url) {
       try {
         const parsed = new URL(url);
-        return `${parsed.hostname}:${parsed.port || '5432'}/${parsed.pathname.replace(/^\//, '')}`;
+        return `${parsed.hostname}:${parsed.port || "5432"}/${parsed.pathname.replace(/^\//, "")}`;
       } catch {
-        return '[DATABASE_URL]';
+        return "[DATABASE_URL]";
       }
     }
-    return `${this.config.get('database.host')}:${this.config.get('database.port')}/${this.config.get('database.name')}`;
+    return `${this.config.get("database.host")}:${this.config.get("database.port")}/${this.config.get("database.name")}`;
   }
 }

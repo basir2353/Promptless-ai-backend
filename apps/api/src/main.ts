@@ -23,7 +23,7 @@ async function bootstrap() {
 
   const trpcRouter = app.get(TrpcRouter);
   app.use(
-    '/trpc',
+    "/trpc",
     trpcExpress.createExpressMiddleware({
       router: trpcRouter.appRouter,
       createContext: () => ({}),

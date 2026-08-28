@@ -1,8 +1,8 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { Processor, WorkerHost } from "@nestjs/bullmq";
+import { Job } from "bullmq";
+import { Injectable, Logger } from "@nestjs/common";
 
-@Processor('memory-processing')
+@Processor("memory-processing")
 @Injectable()
 export class MemoryProcessor extends WorkerHost {
   private readonly logger = new Logger(MemoryProcessor.name);
@@ -15,6 +15,6 @@ export class MemoryProcessor extends WorkerHost {
     this.logger.log(
       `Background processing finished for app: ${app} (User: ${userId})`,
     );
-    return { status: 'completed', processedAt: new Date().toISOString() };
+    return { status: "completed", processedAt: new Date().toISOString() };
   }
 }

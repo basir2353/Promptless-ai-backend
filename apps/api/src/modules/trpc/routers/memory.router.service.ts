@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { QdrantService } from '../../memory/qdrant.service';
-import { EmbeddingService } from '../../memory/embedding.service';
-import { MemoryExtractorService } from '../../memory/memory-extractor.service';
-import { ContextRetrieverService } from '../../memory/context-retriever.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaClient } from "@prisma/client";
+import { QdrantService } from "../../memory/qdrant.service";
+import { EmbeddingService } from "../../memory/embedding.service";
+import { MemoryExtractorService } from "../../memory/memory-extractor.service";
+import { ContextRetrieverService } from "../../memory/context-retriever.service";
 
 const prisma = new PrismaClient();
 
@@ -21,7 +21,7 @@ export class MemoryRouterService {
   async addMemory(
     userId: string,
     text: string,
-    type: string = 'user_fact',
+    type: string = "user_fact",
     metadata?: Record<string, any>,
   ) {
     try {
@@ -59,7 +59,7 @@ export class MemoryRouterService {
       return {
         success: true,
         id,
-        message: 'Memory stored in both Qdrant and PostgreSQL successfully!',
+        message: "Memory stored in both Qdrant and PostgreSQL successfully!",
       };
     } catch (error: any) {
       this.logger.error(`Failed to add memory for user ${userId}:`, error);
@@ -75,7 +75,7 @@ export class MemoryRouterService {
   async getUserMemories(userId: string) {
     return prisma.memoryItem.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -89,7 +89,7 @@ export class MemoryRouterService {
 
     return {
       success: true,
-      message: 'Memory deleted from both Qdrant and PostgreSQL!',
+      message: "Memory deleted from both Qdrant and PostgreSQL!",
     };
   }
 
@@ -109,7 +109,7 @@ export class MemoryRouterService {
 
     return {
       success: true,
-      message: 'All user memories cleared from Qdrant and PostgreSQL!',
+      message: "All user memories cleared from Qdrant and PostgreSQL!",
     };
   }
 }

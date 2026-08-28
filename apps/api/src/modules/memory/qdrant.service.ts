@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { QdrantClient } from '@qdrant/js-client-rest';
+import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 @Injectable()
 export class QdrantService implements OnModuleInit {
@@ -8,11 +8,12 @@ export class QdrantService implements OnModuleInit {
   private client: QdrantClient;
   private qdrantUrl: string;
   private apiKey: string;
-  public readonly COLLECTION_NAME = 'user_memories';
+  public readonly COLLECTION_NAME = "user_memories";
 
   constructor(private readonly configService: ConfigService) {
-    this.qdrantUrl = this.configService.get<string>('QDRANT_URL') || 'http://localhost:6333';
-    this.apiKey = this.configService.get<string>('QDRANT_API_KEY') || '';
+    this.qdrantUrl =
+      this.configService.get<string>("QDRANT_URL") || "http://localhost:6333";
+    this.apiKey = this.configService.get<string>("QDRANT_API_KEY") || "";
 
     this.client = new QdrantClient({
       url: this.qdrantUrl,
@@ -39,22 +40,31 @@ export class QdrantService implements OnModuleInit {
         await this.client.createCollection(this.COLLECTION_NAME, {
           vectors: {
             size: 1536,
-            distance: 'Cosine',
+            distance: "Cosine",
           },
         });
 
-        this.logger.log(`Collection '${this.COLLECTION_NAME}' created successfully!`);
+        this.logger.log(
+          `Collection '${this.COLLECTION_NAME}' created successfully!`,
+        );
       } else {
-        this.logger.log(`Qdrant Collection '${this.COLLECTION_NAME}' is ready.`);
+        this.logger.log(
+          `Qdrant Collection '${this.COLLECTION_NAME}' is ready.`,
+        );
       }
 
       await this.client.createPayloadIndex(this.COLLECTION_NAME, {
-        field_name: 'userId',
-        field_schema: 'keyword',
+        field_name: "userId",
+        field_schema: "keyword",
       });
-      this.logger.log(`Payload index for 'userId' ensured on '${this.COLLECTION_NAME}'.`);
+      this.logger.log(
+        `Payload index for 'userId' ensured on '${this.COLLECTION_NAME}'.`,
+      );
     } catch (error) {
-      this.logger.error('Failed to connect or initialize Qdrant collection:', error);
+      this.logger.error(
+        "Failed to connect or initialize Qdrant collection:",
+        error,
+      );
     }
   }
 
@@ -82,13 +92,13 @@ export class QdrantService implements OnModuleInit {
 
   async searchSimilar(userId: string, vector: number[], limit = 5) {
     try {
-      const endpoint = `${this.qdrantUrl.replace(/\/$/, '')}/collections/${this.COLLECTION_NAME}/points/search`;
-      
+      const endpoint = `${this.qdrantUrl.replace(/\/$/, "")}/collections/${this.COLLECTION_NAME}/points/search`;
+
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey ? { 'api-key': this.apiKey } : {}),
+          "Content-Type": "application/json",
+          ...(this.apiKey ? { "api-key": this.apiKey } : {}),
         },
         body: JSON.stringify({
           vector,
@@ -97,7 +107,7 @@ export class QdrantService implements OnModuleInit {
           filter: {
             must: [
               {
-                key: 'userId',
+                key: "userId",
                 match: {
                   value: userId,
                 },
@@ -110,13 +120,16 @@ export class QdrantService implements OnModuleInit {
       const data = await response.json();
 
       if (!response.ok) {
-        this.logger.error('Qdrant Native Search Raw Error:', JSON.stringify(data));
-        throw new Error(data?.status?.error || 'Qdrant search request failed');
+        this.logger.error(
+          "Qdrant Native Search Raw Error:",
+          JSON.stringify(data),
+        );
+        throw new Error(data?.status?.error || "Qdrant search request failed");
       }
 
       return data.result;
     } catch (err: any) {
-      this.logger.error('Qdrant Search Error Details:', err?.message || err);
+      this.logger.error("Qdrant Search Error Details:", err?.message || err);
       throw err;
     }
   }
@@ -127,7 +140,7 @@ export class QdrantService implements OnModuleInit {
         points: [memoryId],
       });
     } catch (err: any) {
-      this.logger.error('Failed to delete memory point:', err?.message || err);
+      this.logger.error("Failed to delete memory point:", err?.message || err);
       throw err;
     }
   }
@@ -138,7 +151,7 @@ export class QdrantService implements OnModuleInit {
         filter: {
           must: [
             {
-              key: 'userId',
+              key: "userId",
               match: {
                 value: userId,
               },
@@ -147,7 +160,7 @@ export class QdrantService implements OnModuleInit {
         },
       });
     } catch (err: any) {
-      this.logger.error('Failed to clear user memories:', err?.message || err);
+      this.logger.error("Failed to clear user memories:", err?.message || err);
       throw err;
     }
   }

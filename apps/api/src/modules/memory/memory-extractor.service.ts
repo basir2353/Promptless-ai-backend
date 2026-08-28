@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { QdrantService } from './qdrant.service';
-import { EmbeddingService } from './embedding.service';
-import { PrismaClient } from '@prisma/client';
+import { Injectable, Logger } from "@nestjs/common";
+import { QdrantService } from "./qdrant.service";
+import { EmbeddingService } from "./embedding.service";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -38,7 +38,7 @@ export class MemoryExtractorService {
           vector,
           userId,
           text: fact,
-          metadata: { source: 'automated_extractor', originalText: rawText },
+          metadata: { source: "automated_extractor", originalText: rawText },
         });
 
         // 3. PostgreSQL (Prisma)
@@ -46,10 +46,10 @@ export class MemoryExtractorService {
           data: {
             id,
             userId,
-            type: 'extracted_fact',
+            type: "extracted_fact",
             text: fact,
             embeddingId: id,
-            meta: { source: 'automated_extractor' },
+            meta: { source: "automated_extractor" },
           },
         });
       }
@@ -60,7 +60,10 @@ export class MemoryExtractorService {
         facts: extractedFacts,
       };
     } catch (error: any) {
-      this.logger.error('Failed to extract and store memory:', error?.message || error);
+      this.logger.error(
+        "Failed to extract and store memory:",
+        error?.message || error,
+      );
       throw error;
     }
   }

@@ -1,10 +1,10 @@
 /** Shared AI gateway types for routing and suggestion generation. */
 
-export type TaskComplexity = 'SIMPLE' | 'COMPLEX';
+export type TaskComplexity = "SIMPLE" | "COMPLEX";
 
-export type ImpactLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+export type ImpactLevel = "LOW" | "MEDIUM" | "HIGH";
 
-export type ModelProviderKind = 'openrouter' | 'ollama';
+export type ModelProviderKind = "openrouter" | "ollama";
 
 export interface RouteDecision {
   provider: ModelProviderKind;
@@ -29,7 +29,7 @@ export interface GeneratedSuggestion {
 }
 
 export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -37,7 +37,7 @@ export interface CompletionRequest {
   model: string;
   messages: ChatMessage[];
   temperature?: number;
-  responseFormat?: 'json' | 'text';
+  responseFormat?: "json" | "text";
 }
 
 export interface CompletionResult {

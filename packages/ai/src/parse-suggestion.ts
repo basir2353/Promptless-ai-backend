@@ -1,10 +1,10 @@
-import { AiGatewayError } from './errors';
-import type { GeneratedSuggestion, ImpactLevel } from './types';
+import { AiGatewayError } from "./errors";
+import type { GeneratedSuggestion, ImpactLevel } from "./types";
 
-const IMPACT_LEVELS = new Set<ImpactLevel>(['LOW', 'MEDIUM', 'HIGH']);
+const IMPACT_LEVELS = new Set<ImpactLevel>(["LOW", "MEDIUM", "HIGH"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function extractJsonObject(raw: string): unknown {
@@ -16,25 +16,25 @@ function extractJsonObject(raw: string): unknown {
     if (fenced?.[1]) {
       return JSON.parse(fenced[1].trim());
     }
-    const start = trimmed.indexOf('{');
-    const end = trimmed.lastIndexOf('}');
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
     if (start >= 0 && end > start) {
       return JSON.parse(trimmed.slice(start, end + 1));
     }
-    throw new Error('No JSON object found in model output');
+    throw new Error("No JSON object found in model output");
   }
 }
 
 function requireNonEmptyString(value: unknown, field: string): string {
-  if (typeof value !== 'string' || !value.trim()) {
+  if (typeof value !== "string" || !value.trim()) {
     throw new Error(`Missing or invalid string field: ${field}`);
   }
   return value.trim();
 }
 
 function requireImpact(value: unknown): ImpactLevel {
-  if (typeof value !== 'string') {
-    throw new Error('Missing or invalid field: impact');
+  if (typeof value !== "string") {
+    throw new Error("Missing or invalid field: impact");
   }
   const normalized = value.trim().toUpperCase() as ImpactLevel;
   if (!IMPACT_LEVELS.has(normalized)) {
@@ -44,9 +44,9 @@ function requireImpact(value: unknown): ImpactLevel {
 }
 
 function requireTimeSavedMins(value: unknown): number {
-  const n = typeof value === 'string' ? Number(value) : value;
-  if (typeof n !== 'number' || !Number.isFinite(n) || n < 0) {
-    throw new Error('Missing or invalid field: timeSavedMins');
+  const n = typeof value === "string" ? Number(value) : value;
+  if (typeof n !== "number" || !Number.isFinite(n) || n < 0) {
+    throw new Error("Missing or invalid field: timeSavedMins");
   }
   return Math.round(n);
 }
@@ -58,18 +58,18 @@ export function parseGeneratedSuggestion(rawText: string): GeneratedSuggestion {
   try {
     const parsed = extractJsonObject(rawText);
     if (!isRecord(parsed)) {
-      throw new Error('Suggestion JSON must be an object');
+      throw new Error("Suggestion JSON must be an object");
     }
 
     // Accept a few common aliases from loosely prompted models.
-    const app = requireNonEmptyString(parsed.app ?? parsed.source, 'app');
+    const app = requireNonEmptyString(parsed.app ?? parsed.source, "app");
     const issue = requireNonEmptyString(
       parsed.issue ?? parsed.title ?? parsed.problem,
-      'issue',
+      "issue",
     );
     const explanation = requireNonEmptyString(
       parsed.explanation ?? parsed.body ?? parsed.reason,
-      'explanation',
+      "explanation",
     );
     const impact = requireImpact(parsed.impact);
     const timeSavedMins = requireTimeSavedMins(
@@ -79,7 +79,7 @@ export function parseGeneratedSuggestion(rawText: string): GeneratedSuggestion {
     return { app, issue, impact, timeSavedMins, explanation };
   } catch (cause) {
     throw new AiGatewayError(
-      'PARSE_ERROR',
+      "PARSE_ERROR",
       `Failed to parse Suggestion JSON: ${cause instanceof Error ? cause.message : String(cause)}`,
       { cause },
     );
