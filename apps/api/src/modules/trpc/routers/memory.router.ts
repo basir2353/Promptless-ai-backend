@@ -1,46 +1,35 @@
-import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
-import { PrismaClient } from "@prisma/client";
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { router, protectedProcedure } from '../trpc';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export const memoryRouter = router({
-  // 1. ADD MEMORY / CONTEXT
-  addMemory: publicProcedure
+  addMemory: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         text: z.string(),
-        app: z.string().optional().default("general"),
-        type: z.string().optional().default("user_fact"),
+        app: z.string().optional().default('general'),
+        type: z.string().optional().default('user_fact'),
         metadata: z.record(z.any()).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { userId, text, app, type, metadata } = input;
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      const { text, app, type, metadata } = input;
       const id = crypto.randomUUID();
 
-      // Ensure User exists in PostgreSQL
-      await prisma.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-          id: userId,
-          email: userId.includes("@") ? userId : `${userId}@placeholder.local`,
-        },
-      });
-
-      // Save to PostgreSQL with App and Metadata context
       const memory = await prisma.memoryItem.create({
         data: {
           id,
           userId,
-          type: type || "user_fact",
+          type: type || 'user_fact',
           text,
           embeddingId: id,
           meta: {
             ...(metadata || {}),
-            app: app || "general",
+            app: app || 'general',
           },
         },
       });
@@ -49,41 +38,39 @@ export const memoryRouter = router({
         success: true,
         id,
         memory,
-        message: "Memory stored in database successfully!",
+        message: 'Memory stored in database successfully!',
       };
     }),
 
-  // 2. GET USER MEMORIES
-  getUserMemories: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      const memories = await prisma.memoryItem.findMany({
-        where: { userId: input.userId },
-        orderBy: { createdAt: "desc" },
-      });
-      return { success: true, memories };
-    }),
+  getUserMemories: protectedProcedure.query(async ({ ctx }) => {
+    const memories = await prisma.memoryItem.findMany({
+      where: { userId: ctx.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return { success: true, memories };
+  }),
 
-  // 3. DELETE MEMORY
-  deleteMemory: publicProcedure
+  deleteMemory: protectedProcedure
     .input(z.object({ memoryId: z.string() }))
-    .mutation(async ({ input }) => {
-      await prisma.memoryItem
-        .delete({
-          where: { id: input.memoryId },
-        })
-        .catch(() => null);
-
-      return { success: true, message: "Memory deleted!" };
-    }),
-
-  // 4. CLEAR USER MEMORIES
-  clearUserMemories: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .mutation(async ({ input }) => {
-      await prisma.memoryItem.deleteMany({
-        where: { userId: input.userId },
+    .mutation(async ({ input, ctx }) => {
+      const result = await prisma.memoryItem.deleteMany({
+        where: { id: input.memoryId, userId: ctx.userId },
       });
-      return { success: true, message: "User memories cleared!" };
+
+      if (result.count === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Memory not found.',
+        });
+      }
+
+      return { success: true, message: 'Memory deleted!' };
     }),
+
+  clearUserMemories: protectedProcedure.mutation(async ({ ctx }) => {
+    await prisma.memoryItem.deleteMany({
+      where: { userId: ctx.userId },
+    });
+    return { success: true, message: 'User memories cleared!' };
+  }),
 });

@@ -2,6 +2,12 @@ export default () => ({
   nodeEnv: process.env.NODE_ENV ?? "development",
   host: process.env.HOST ?? "0.0.0.0",
   port: parseInt(process.env.PORT ?? "3000", 10),
+  jwt: {
+    secret:
+      process.env.JWT_SECRET?.trim() ||
+      "promptless-dev-jwt-secret-change-in-production",
+    expiresIn: process.env.JWT_EXPIRES_IN?.trim() || "7d",
+  },
   database: {
     url: process.env.DATABASE_URL,
     host: process.env.DATABASE_HOST ?? "localhost",

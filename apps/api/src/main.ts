@@ -3,6 +3,7 @@ import { json, type NextFunction, type Request, type Response } from 'express';
 import { AppModule } from './app.module';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { TrpcRouter } from './modules/trpc/trpc.router';
+import { createTRPCContext } from './modules/trpc/context';
 
 async function bootstrap() {
   // tRPC must read the raw body. Nest's JSON parser would eat it first
@@ -23,10 +24,10 @@ async function bootstrap() {
 
   const trpcRouter = app.get(TrpcRouter);
   app.use(
-    "/trpc",
+    '/trpc',
     trpcExpress.createExpressMiddleware({
       router: trpcRouter.appRouter,
-      createContext: () => ({}),
+      createContext: createTRPCContext,
     }),
   );
 

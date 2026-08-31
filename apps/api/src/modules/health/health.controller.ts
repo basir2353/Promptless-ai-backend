@@ -14,6 +14,9 @@ export class HealthController {
       health: '/health',
       endpoints: {
         'GET /health': 'API + database status',
+        'POST /trpc/auth.signup': 'Create account (returns accessToken + user)',
+        'POST /trpc/auth.login': 'Login (returns accessToken + user)',
+        'GET /trpc/auth.me': 'Current user (Bearer token required)',
         'POST /trpc/ai.chat': 'Chat via OpenRouter / Ollama / stub',
         'GET /trpc/ai.listModels': 'Model router list',
         'GET /trpc/billing.getPlans': 'Stripe/local plans',
@@ -21,10 +24,10 @@ export class HealthController {
         'POST /trpc/notifications.registerDevice': 'Register FCM/APNs/web token',
         'POST /trpc/notifications.send': 'Send a push/context alert',
         'POST /trpc/context.ingest': 'Ingest client context (mobile/desktop/vscode/browser)',
-        'GET /trpc/permissions.getPermissions?input={"userId":"user-1"}': 'Get permissions',
-        'POST /trpc/permissions.togglePermission': 'Toggle an app permission',
-        'POST /trpc/memory.addMemory': 'Save a memory',
-        'GET /trpc/memory.getUserMemories?input={"userId":"user-1"}': 'List memories',
+        'GET /trpc/permissions.getPermissions': 'Get permissions (Bearer token)',
+        'POST /trpc/permissions.togglePermission': 'Toggle an app permission (Bearer token)',
+        'POST /trpc/memory.addMemory': 'Save a memory (Bearer token)',
+        'GET /trpc/memory.getUserMemories': 'List memories (Bearer token)',
       },
     };
   }
