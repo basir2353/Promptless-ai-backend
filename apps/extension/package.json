@@ -5,6 +5,9 @@
   "description": "Browser extension + web bridge for Promptless",
   "scripts": {
     "dev": "node bridge.mjs",
-    "bridge": "node bridge.mjs"
+    "bridge": "node bridge.mjs",
+    "build": "echo \"Extension has no compile step\"",
+    "lint": "echo \"No lint yet\"",
+    "clean": "echo \"Nothing to clean\""
   }
 }

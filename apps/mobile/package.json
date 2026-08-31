@@ -5,6 +5,9 @@
   "description": "React Native data layer connected to live tRPC",
   "scripts": {
     "dev": "node sync.mjs",
-    "sync": "node sync.mjs"
+    "sync": "node sync.mjs",
+    "build": "echo \"Mobile has no compile step\"",
+    "lint": "echo \"No lint yet\"",
+    "clean": "echo \"Nothing to clean\""
   }
 }

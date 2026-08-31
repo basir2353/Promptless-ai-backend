@@ -5,6 +5,8 @@
   "description": "Next.js dashboard",
   "scripts": {
     "dev": "echo \"Web (Next.js) scaffold — implement later\"",
-    "build": "echo \"No build yet\""
+    "build": "echo \"No build yet\"",
+    "lint": "echo \"No lint yet\"",
+    "clean": "echo \"Nothing to clean\""
   }
 }

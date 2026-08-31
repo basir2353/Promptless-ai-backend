@@ -3,18 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "description": "Promptless monorepo — NestJS + tRPC backend with shared packages",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@11.21.0",
   "scripts": {
-    "dev": "npm run dev -w @promptless/api",
-    "dev:api": "npm run dev -w @promptless/api",
-    "build": "npm run build -w @promptless/core && npm run build -w @promptless/ai && npm run build -w @promptless/perception && npm run build -w @promptless/memory && npm run build -w @promptless/integrations && npm run build -w @promptless/api",
-    "build:api": "npm run build -w @promptless/core && npm run build -w @promptless/ai && npm run build -w @promptless/api",
-    "start": "npm run start -w @promptless/api",
-    "start:prod": "npm run start:prod -w @promptless/api",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "turbo run dev --filter=@promptless/api",
+    "dev:api": "turbo run dev --filter=@promptless/api",
+    "dev:all": "turbo run dev",
+    "build": "turbo run build",
+    "build:api": "turbo run build --filter=@promptless/api...",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "typecheck": "turbo run typecheck",
+    "start": "pnpm --filter @promptless/api start",
+    "start:prod": "pnpm --filter @promptless/api start:prod",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push"
   },
@@ -22,9 +22,11 @@
     "@prisma/client": "^6.19.3"
   },
   "devDependencies": {
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "turbo": "^2.5.4"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "pnpm": ">=9"
   }
 }

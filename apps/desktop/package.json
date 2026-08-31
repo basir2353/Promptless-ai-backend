@@ -5,6 +5,9 @@
   "description": "Desktop context listener connected to live tRPC",
   "scripts": {
     "dev": "node listen.mjs",
-    "listen": "node listen.mjs"
+    "listen": "node listen.mjs",
+    "build": "echo \"Desktop has no compile step\"",
+    "lint": "echo \"No lint yet\"",
+    "clean": "echo \"Nothing to clean\""
   }
 }
