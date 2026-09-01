@@ -22,17 +22,6 @@ export class MemoryExtractorService {
         const vector = await this.embeddingService.generateEmbedding(fact);
         const id = crypto.randomUUID();
 
-        // 1. Ensure User exists
-        await prisma.user.upsert({
-          where: { id: userId },
-          update: {},
-          create: {
-            id: userId,
-            email: `${userId}@placeholder.local`,
-          },
-        });
-
-        // 2. Vector DB (Qdrant)
         await this.qdrantService.upsertMemory({
           id,
           vector,

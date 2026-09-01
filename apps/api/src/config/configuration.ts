@@ -46,4 +46,12 @@ export default () => ({
   },
   publicApiUrl: process.env.PUBLIC_API_URL ?? 'http://localhost:3000',
   publicWebUrl: process.env.PUBLIC_WEB_URL ?? 'http://localhost:5174',
+  oauth: {
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
+    githubClientId: process.env.GITHUB_CLIENT_ID,
+    githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+    githubRedirectUri: process.env.GITHUB_REDIRECT_URI,
+  },
 });

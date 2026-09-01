@@ -28,15 +28,6 @@ export class MemoryRouterService {
       const vector = await this.embeddingService.generateEmbedding(text);
       const id = crypto.randomUUID();
 
-      await prisma.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-          id: userId,
-          email: `${userId}@placeholder.local`,
-        },
-      });
-
       await this.qdrantService.upsertMemory({
         id,
         vector,

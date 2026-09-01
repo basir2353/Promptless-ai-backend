@@ -32,10 +32,43 @@ export function verifyAccessToken(token: string): AccessTokenPayload | null {
     const decoded = jwt.verify(token, getJwtSecret());
     if (typeof decoded !== 'object' || decoded === null) return null;
 
-    const { userId, email } = decoded as jwt.JwtPayload & Partial<AccessTokenPayload>;
+    const { userId, email, type } = decoded as jwt.JwtPayload & Partial<
+      AccessTokenPayload & { type?: string }
+    >;
+    if (type === 'checkout') return null;
     if (typeof userId !== 'string' || typeof email !== 'string') return null;
 
     return { userId, email };
+  } catch {
+    return null;
+  }
+}
+
+export type CheckoutTokenPayload = {
+  userId: string;
+  planId: string;
+  type: 'checkout';
+};
+
+export function signCheckoutToken(userId: string, planId: string): string {
+  return jwt.sign(
+    { userId, planId, type: 'checkout' } satisfies CheckoutTokenPayload,
+    getJwtSecret(),
+    { expiresIn: '1h' },
+  );
+}
+
+export function verifyCheckoutToken(token: string): CheckoutTokenPayload | null {
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    if (typeof decoded !== 'object' || decoded === null) return null;
+
+    const { userId, planId, type } = decoded as jwt.JwtPayload &
+      Partial<CheckoutTokenPayload>;
+    if (type !== 'checkout') return null;
+    if (typeof userId !== 'string' || typeof planId !== 'string') return null;
+
+    return { userId, planId, type: 'checkout' };
   } catch {
     return null;
   }

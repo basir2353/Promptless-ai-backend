@@ -3,17 +3,35 @@ import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../../../lib/password';
 import { prisma } from '../../../lib/db';
 import { signAccessToken } from '../../../lib/jwt';
+import {
+  exchangeGithubCode,
+  exchangeGoogleCode,
+  getGithubAuthUrl,
+  getGoogleAuthUrl,
+} from '../../../lib/oauth';
+import { findOrCreateOAuthUser } from '../../../lib/oauth-user';
 import { protectedProcedure, publicProcedure, router } from '../trpc';
 
-function toUser(row: { id: string; email: string; name: string }) {
+function toUser(row: {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+}) {
   return {
     id: row.id,
     name: row.name || row.email.split('@')[0],
     email: row.email,
+    avatarUrl: row.avatarUrl ?? undefined,
   };
 }
 
-function issueAuthResponse(row: { id: string; email: string; name: string }) {
+function issueAuthResponse(row: {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+}) {
   const user = toUser(row);
   const accessToken = signAccessToken({
     userId: user.id,
@@ -86,6 +104,36 @@ export const authRouter = router({
         });
       }
 
+      return issueAuthResponse(row);
+    }),
+
+  googleUrl: publicProcedure
+    .input(z.object({ state: z.string().optional() }).optional())
+    .query(({ input }) => ({
+      success: true as const,
+      url: getGoogleAuthUrl(input?.state),
+    })),
+
+  githubUrl: publicProcedure
+    .input(z.object({ state: z.string().optional() }).optional())
+    .query(({ input }) => ({
+      success: true as const,
+      url: getGithubAuthUrl(input?.state),
+    })),
+
+  google: publicProcedure
+    .input(z.object({ code: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const profile = await exchangeGoogleCode(input.code);
+      const row = await findOrCreateOAuthUser(profile);
+      return issueAuthResponse(row);
+    }),
+
+  github: publicProcedure
+    .input(z.object({ code: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const profile = await exchangeGithubCode(input.code);
+      const row = await findOrCreateOAuthUser(profile);
       return issueAuthResponse(row);
     }),
 

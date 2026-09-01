@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { ensureUser, prisma } from '../../../lib/db';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
+import { prisma, requireExistingUser } from '../../../lib/db';
 
 async function postgresContext(userId: string): Promise<string> {
   const memories = await prisma.memoryItem.findMany({
@@ -94,16 +94,17 @@ export const aiRouter = router({
     ],
   })),
 
-  chat: publicProcedure
+  chat: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         prompt: z.string().min(1),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
-      const memory = await postgresContext(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
+      const memory = await postgresContext(userId);
       const systemPrompt = `You are Promptless AI, a proactive collaborator.${memory}Answer directly and briefly.`;
 
       let provider = 'stub';

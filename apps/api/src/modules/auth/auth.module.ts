@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
 import { JWT_DEV_FALLBACK } from '../../lib/jwt';
+import { AuthController } from './auth.controller';
 
 @Global()
 @Module({
@@ -19,6 +20,7 @@ import { JWT_DEV_FALLBACK } from '../../lib/jwt';
       }),
     }),
   ],
+  controllers: [AuthController],
   exports: [JwtModule],
 })
 export class AuthModule {}

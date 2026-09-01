@@ -18,6 +18,9 @@ model User {
   email        String   @unique
   name         String   @default("")
   passwordHash String?
+  googleId     String?  @unique
+  githubId     String?  @unique
+  avatarUrl    String?
   plan         String   @default("free")
   settings     Json     @default("{}")
   createdAt    DateTime @default(now())

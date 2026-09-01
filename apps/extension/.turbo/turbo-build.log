@@ -1,2 +1,2 @@
-[6n[m]0;C:\Windows\system32\cmd.exe[?25h]0;C:\Windows\system32\cmd.exe $ echo "Extension has no compile step"
+$ echo "Extension has no compile step"
 "Extension has no compile step"

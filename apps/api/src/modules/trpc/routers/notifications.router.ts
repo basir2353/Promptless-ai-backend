@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { ensureUser, prisma } from '../../../lib/db';
+import { router, protectedProcedure } from '../trpc';
+import { prisma, requireExistingUser } from '../../../lib/db';
 
 async function sendFcm(token: string, title: string, body: string): Promise<boolean> {
   const key = process.env.FCM_SERVER_KEY?.trim();
@@ -20,46 +20,52 @@ async function sendFcm(token: string, title: string, body: string): Promise<bool
 }
 
 export const notificationsRouter = router({
-  registerDevice: publicProcedure
+  registerDevice: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         platform: z.enum(['web', 'ios', 'android', 'desktop']),
         provider: z.enum(['fcm', 'apns', 'web']),
         token: z.string().min(3),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
       const device = await prisma.deviceToken.upsert({
-        where: { userId_token: { userId: input.userId, token: input.token } },
+        where: { userId_token: { userId, token: input.token } },
         update: { platform: input.platform, provider: input.provider },
-        create: input,
+        create: {
+          userId,
+          platform: input.platform,
+          provider: input.provider,
+          token: input.token,
+        },
       });
       return { success: true, id: device.id };
     }),
 
-  listDevices: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      const devices = await prisma.deviceToken.findMany({
-        where: { userId: input.userId },
-        orderBy: { createdAt: 'desc' },
-      });
-      return { success: true, devices };
-    }),
+  listDevices: protectedProcedure.query(async ({ ctx }) => {
+    await requireExistingUser(ctx.userId);
+    const devices = await prisma.deviceToken.findMany({
+      where: { userId: ctx.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return { success: true, devices };
+  }),
 
-  send: publicProcedure
+  send: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         title: z.string(),
         body: z.string(),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
-      const devices = await prisma.deviceToken.findMany({ where: { userId: input.userId } });
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
+      const devices = await prisma.deviceToken.findMany({ where: { userId } });
       let delivered = 0;
       for (const device of devices) {
         if (device.provider === 'fcm' && (await sendFcm(device.token, input.title, input.body))) {
@@ -69,7 +75,7 @@ export const notificationsRouter = router({
       const status = delivered > 0 ? 'sent' : 'stored';
       const notification = await prisma.pushNotification.create({
         data: {
-          userId: input.userId,
+          userId,
           title: input.title,
           body: input.body,
           status,
@@ -85,14 +91,13 @@ export const notificationsRouter = router({
       };
     }),
 
-  list: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      const items = await prisma.pushNotification.findMany({
-        where: { userId: input.userId },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      });
-      return { success: true, notifications: items };
-    }),
+  list: protectedProcedure.query(async ({ ctx }) => {
+    await requireExistingUser(ctx.userId);
+    const items = await prisma.pushNotification.findMany({
+      where: { userId: ctx.userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    return { success: true, notifications: items };
+  }),
 });

@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { ensureUser, prisma } from '../../../lib/db';
+import { router, publicProcedure, protectedProcedure } from '../trpc';
+import { prisma, requireExistingUser } from '../../../lib/db';
+import { signCheckoutToken } from '../../../lib/jwt';
 
 const PLANS = [
   {
@@ -26,30 +27,33 @@ const PLANS = [
 export const billingRouter = router({
   getPlans: publicProcedure.query(() => ({ success: true, plans: PLANS })),
 
-  getSubscription: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      const sub = await prisma.subscription.findUnique({ where: { userId: input.userId } });
-      return {
-        success: true,
-        planId: sub?.planId ?? 'free',
-        status: sub?.status ?? 'active',
-        stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY?.trim()),
-      };
-    }),
+  getSubscription: protectedProcedure.query(async ({ ctx }) => {
+    await requireExistingUser(ctx.userId);
+    const sub = await prisma.subscription.findUnique({
+      where: { userId: ctx.userId },
+    });
+    return {
+      success: true,
+      planId: sub?.planId ?? 'free',
+      status: sub?.status ?? 'active',
+      stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY?.trim()),
+    };
+  }),
 
-  createCheckout: publicProcedure
+  createCheckout: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         planId: z.enum(['pro', 'team']),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
       const publicApi = process.env.PUBLIC_API_URL || 'http://localhost:3000';
       const webUrl = process.env.PUBLIC_WEB_URL || 'http://localhost:5174';
       const stripeKey = process.env.STRIPE_SECRET_KEY?.trim();
+      const checkoutToken = signCheckoutToken(userId, input.planId);
 
       if (stripeKey) {
         const params = new URLSearchParams({
@@ -61,7 +65,7 @@ export const billingRouter = router({
           'line_items[0][price_data][unit_amount]': input.planId === 'pro' ? '1900' : '4900',
           'line_items[0][price_data][recurring][interval]': 'month',
           'line_items[0][quantity]': '1',
-          'metadata[userId]': input.userId,
+          'metadata[userId]': userId,
           'metadata[planId]': input.planId,
         });
         const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
@@ -72,33 +76,38 @@ export const billingRouter = router({
           },
           body: params,
         });
-        const session = (await stripeRes.json()) as { url?: string; id?: string; error?: { message?: string } };
+        const session = (await stripeRes.json()) as {
+          url?: string;
+          id?: string;
+          error?: { message?: string };
+        };
         if (!stripeRes.ok || !session.url) {
           throw new Error(session.error?.message || 'Stripe checkout failed');
         }
         return { success: true, provider: 'stripe', url: session.url, sessionId: session.id };
       }
 
-      const url = `${publicApi}/billing/confirm?userId=${encodeURIComponent(input.userId)}&planId=${input.planId}&redirect=${encodeURIComponent(`${webUrl}/app/settings`)}`;
+      const url = `${publicApi}/billing/confirm?token=${encodeURIComponent(checkoutToken)}&redirect=${encodeURIComponent(`${webUrl}/app/settings`)}`;
       return { success: true, provider: 'local', url, sessionId: `local-${Date.now()}` };
     }),
 
-  confirmCheckout: publicProcedure
+  confirmCheckout: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         planId: z.enum(['free', 'pro', 'team']),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
       const sub = await prisma.subscription.upsert({
-        where: { userId: input.userId },
+        where: { userId },
         update: { planId: input.planId, status: 'active' },
-        create: { userId: input.userId, planId: input.planId, status: 'active' },
+        create: { userId, planId: input.planId, status: 'active' },
       });
       await prisma.user.update({
-        where: { id: input.userId },
+        where: { id: userId },
         data: { plan: input.planId },
       });
       return { success: true, planId: sub.planId, status: sub.status };

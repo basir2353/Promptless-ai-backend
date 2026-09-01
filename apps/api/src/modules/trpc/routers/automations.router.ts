@@ -1,6 +1,7 @@
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, publicProcedure } from '../trpc';
-import { ensureUser, prisma } from '../../../lib/db';
+import { router, protectedProcedure } from '../trpc';
+import { prisma, requireExistingUser } from '../../../lib/db';
 
 const SEED = [
   { name: 'Inbox triage on open', trigger: 'Gmail opens', action: 'Summarize unread + flag urgent', app: 'Gmail', enabled: true, runsThisWeek: 18 },
@@ -29,53 +30,61 @@ function toUi(row: {
 }
 
 export const automationsRouter = router({
-  list: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      await ensureUser(input.userId);
-      let rows = await prisma.automation.findMany({
-        where: { userId: input.userId },
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.userId;
+    await requireExistingUser(userId);
+
+    let rows = await prisma.automation.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (rows.length === 0) {
+      await prisma.automation.createMany({
+        data: SEED.map((item) => ({ ...item, userId })),
+      });
+      rows = await prisma.automation.findMany({
+        where: { userId },
         orderBy: { createdAt: 'desc' },
       });
+    }
 
-      if (rows.length === 0) {
-        await prisma.automation.createMany({
-          data: SEED.map((item) => ({ ...item, userId: input.userId })),
-        });
-        rows = await prisma.automation.findMany({
-          where: { userId: input.userId },
-          orderBy: { createdAt: 'desc' },
-        });
+    return { success: true, automations: rows.map(toUi) };
+  }),
+
+  setEnabled: protectedProcedure
+    .input(z.object({ id: z.string(), enabled: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      const existing = await prisma.automation.findFirst({
+        where: { id: input.id, userId: ctx.userId },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Automation not found.' });
       }
 
-      return { success: true, automations: rows.map(toUi) };
-    }),
-
-  setEnabled: publicProcedure
-    .input(z.object({ id: z.string(), enabled: z.boolean() }))
-    .mutation(async ({ input }) => {
       const row = await prisma.automation.update({
-        where: { id: input.id },
+        where: { id: existing.id },
         data: { enabled: input.enabled },
       });
       return { success: true, id: row.id, enabled: row.enabled };
     }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         name: z.string().min(1),
         trigger: z.string().min(1),
         action: z.string().min(1),
         app: z.string().min(1),
       }),
     )
-    .mutation(async ({ input }) => {
-      await ensureUser(input.userId);
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+      await requireExistingUser(userId);
+
       const row = await prisma.automation.create({
         data: {
-          userId: input.userId,
+          userId,
           name: input.name,
           trigger: input.trigger,
           action: input.action,
@@ -86,10 +95,15 @@ export const automationsRouter = router({
       return { success: true, automation: toUi(row) };
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      await prisma.automation.delete({ where: { id: input.id } }).catch(() => null);
+    .mutation(async ({ input, ctx }) => {
+      const result = await prisma.automation.deleteMany({
+        where: { id: input.id, userId: ctx.userId },
+      });
+      if (result.count === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Automation not found.' });
+      }
       return { success: true, id: input.id };
     }),
 });

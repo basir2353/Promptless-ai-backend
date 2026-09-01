@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { Impact } from '@prisma/client';
-import { router, publicProcedure } from '../trpc';
-import { ensureUser, prisma } from '../../../lib/db';
+import { router, protectedProcedure } from '../trpc';
+import { prisma, requireExistingUser } from '../../../lib/db';
 
 const DEFAULT_ACTIONS = [
   { id: 'fix', label: 'Fix', variant: 'primary' },
@@ -88,44 +88,43 @@ function toUi(row: {
 }
 
 export const suggestionsRouter = router({
-  list: publicProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
-      await ensureUser(input.userId);
-      let rows = await prisma.suggestion.findMany({
-        where: { userId: input.userId },
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.userId;
+    await requireExistingUser(userId);
+
+    let rows = await prisma.suggestion.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (rows.length === 0) {
+      await prisma.suggestion.createMany({
+        data: SEED.map((item) => ({ ...item, userId })),
+      });
+      rows = await prisma.suggestion.findMany({
+        where: { userId },
         orderBy: { createdAt: 'desc' },
       });
+    }
 
-      if (rows.length === 0) {
-        await prisma.suggestion.createMany({
-          data: SEED.map((item) => ({ ...item, userId: input.userId })),
-        });
-        rows = await prisma.suggestion.findMany({
-          where: { userId: input.userId },
-          orderBy: { createdAt: 'desc' },
-        });
-      }
+    return { success: true, suggestions: rows.map(toUi) };
+  }),
 
-      return { success: true, suggestions: rows.map(toUi) };
-    }),
-
-  updateStatus: publicProcedure
+  updateStatus: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
         id: z.string(),
         status: z.enum(['pending', 'accepted', 'dismissed']),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const existing = await prisma.suggestion.findFirst({
-        where: { id: input.id, userId: input.userId },
+        where: { id: input.id, userId: ctx.userId },
       });
       if (!existing) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Suggestion not found. First GET /trpc/suggestions.list and copy a real id.',
+          message: 'Suggestion not found.',
         });
       }
 
